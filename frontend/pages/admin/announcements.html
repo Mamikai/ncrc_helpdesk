@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCRC Help Desk - Announcements</title>
+    <link rel="stylesheet" href="../../assets/css/variables.css">
+    <link rel="stylesheet" href="../../assets/css/components.css">
+</head>
+<body>
+<div class="app-shell">
+    <div id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="page-inner medium">
+
+            <div class="topbar">
+                <div class="page-title">
+                    <h2>Announcements</h2>
+                    <div class="subtitle">Posted here appear on every staff member's dashboard</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="notification-bell" id="notificationBell">🔔<span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                        <div class="notification-dropdown" id="notificationDropdown"></div>
+                    </div>
+                    <div class="user-menu">
+                        <div class="user-menu-info">
+                            <div class="user-menu-name" id="userMenuName">—</div>
+                            <div class="user-menu-role" id="userMenuRole">—</div>
+                        </div>
+                        <div class="user-avatar" id="userMenuAvatar">—</div>
+                        <button class="btn btn-outline btn-sm" id="logoutBtn">Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Post New Announcement</h3></div>
+                <form id="announcementForm">
+                    <div class="form-group">
+                        <label class="form-label" for="announcementTitle">Title</label>
+                        <input type="text" id="announcementTitle" class="form-control" placeholder="e.g. Scheduled system maintenance">
+                        <div class="form-error" id="announcementTitleError">Please enter a title.</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="announcementBody">Message</label>
+                        <textarea id="announcementBody" class="form-control" placeholder="Details staff should know..."></textarea>
+                        <div class="form-error" id="announcementBodyError">Please enter a message.</div>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="postAnnouncementBtn">Post Announcement</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Existing Announcements</h3></div>
+                <div id="existingAnnouncementsList"><!-- TODO: dynamic data from backend - announcements.js loadAnnouncements() --></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="../../assets/js/ui.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/session.js"></script>
+<script src="../../assets/js/sidebar.js"></script>
+<script src="../../assets/js/notifications.js"></script>
+<script src="../../assets/js/announcements.js"></script>
+<script>
+(async function () {
+    const session = await initAuthenticatedPage();
+    if (!session) return;
+    loadAnnouncements('existingAnnouncementsList');
+    initPostAnnouncementForm();
+})();
+</script>
+</body>
+</html>

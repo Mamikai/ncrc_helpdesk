@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NCRC Help Desk – Asset Inventory</title>
+    <link rel="stylesheet" href="../../assets/css/variables.css">
+    <link rel="stylesheet" href="../../assets/css/components.css">
+    <link rel="stylesheet" href="../../assets/css/inventory.css">
+</head>
+<body>
+    <div class="app-shell">
+        <div id="sidebarMount"></div>
+        <div class="main-content">
+            <div class="page-inner">
+
+                <!-- topbar -->
+                <div class="topbar">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <button class="hamburger" id="hamburgerBtn" aria-label="Toggle sidebar">☰</button>
+                        <div class="opage-title">
+                            <h2>Asset Inventory</h2>
+                            <div class="subtitle">All registered equipment across NCRC departments</div>
+                        </div>
+                    </div>
+                    <div class="topbar-right">
+                        <div class="notification-bell" id="notificationBell">
+                            🔔
+                            <span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                            <div class="notification-dropdown" id="notificationDropdown"></div>
+                        </div>
+                        <div class="user-menu">
+                            <div class="user-menu-info">
+                                <div class="user-menu-name" id="userMenuName">ICT Admin</div>
+                                <div class="user-menu-role" id="userMenuRole">Administrator</div>
+                            </div>
+                            <div class="user-avatar" id="userMenuAvatar">IA</div>
+                            <button class="btn btn-outline btn-sm" id="logoutBtn">Logout</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- quick actions -->
+                <div class="quick-actions" id="ictActions">
+                    <button class="btn btn-gold" id="addAssetBtnTop">＋ Register New Asset</button>
+                    <button class="btn btn-outline" id="exportCsvBtn">⬇ Export CSV</button>
+                </div>
+
+                <!-- filter bar -->
+                <div class="filter-bar">
+                    <span class="filter-label">🔍 Filter</span>
+                    <input type="text" class="form-control" id="filterSearch" placeholder="Search tag, name, serial…" style="min-width:200px;">
+                    <select class="form-control" id="filterCategory">
+                        <option value="">All Categories</option>
+                        <option value="Desktop">Desktop</option>
+                        <option value="Laptop">Laptop</option>
+                        <option value="UPS">UPS</option>
+                        <option value="Printer">Printer</option>
+                        <option value="Network Device">Network Device</option>
+                        <option value="TV">TV</option>
+                        <option value="Air Conditioner">Air Conditioner</option>
+                        <option value="IP Phone">IP Phone</option>
+                        <option value="Tablet">Tablet</option>
+                        <option value="Boardroom Accessory">Boardroom Accessory</option>
+                        <option value="CCTV Camera">CCTV Camera</option>
+                        <option value="Software License">Software License</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <select class="form-control" id="filterStatus">
+                        <option value="">All Status</option>
+                        <option value="Working">Working</option>
+                        <option value="Requires Servicing">Requires Servicing</option>
+                        <option value="In Store">In Store</option>
+                        <option value="Decommissioned">Decommissioned</option>
+                        <option value="Faulty">Faulty</option>
+                        <option value="Obsolete">Obsolete</option>
+                        <option value="Not Serviceable">Not Serviceable</option>
+                    </select>
+                    <span class="filter-count" id="assetCount">0 assets</span>
+                </div>
+
+                <!-- main card -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Registered Assets</span>
+                        <span style="font-size:13px;color:var(--text-muted);">Last updated: 16 July 2026</span>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table" id="assetTable">
+                            <thead id="assetTableHead">
+                                <tr>
+                                    <th>Asset Tag</th>
+                                    <th>Category</th>
+                                    <th>Department</th>
+                                    <th>Model / Description</th>
+                                    <th>Serial Number</th>
+                                    <th>Status</th>
+                                    <th>Assigned To</th>
+                                    <th style="width:50px;">&nbsp;</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assetInventoryBody">
+                                <!-- dynamically populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- footer note -->
+                <div style="font-size:13px;color:var(--text-muted);text-align:center;padding:12px 0 0 0;border-top:1px solid var(--border-color);margin-top:8px;">
+                    NCRC Asset Management &bull; Data from inventory snapshot 16 July 2026
+                </div>
+
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- ===== MODAL: Add / Edit Asset ===== -->
+    <div class="modal-overlay" id="assetModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">Register New Asset</div>
+                <button class="modal-close" id="closeModalBtn">&times;</button>
+            </div>
+            <form id="assetForm">
+                <input type="hidden" id="editAssetId" value="">
+                <div class="grid-2">
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label" for="formAssetTag">Asset Tag *</label>
+                            <input type="text" id="formAssetTag" class="form-control" placeholder="e.g. NCRC-AST-010" required>
+                            <div class="form-error" id="assetTagError">Please enter a valid asset tag.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="formCategory">Category</label>
+                            <select id="formCategory" class="form-control">
+                                <option value="Desktop">Desktop</option>
+                                <option value="Laptop" selected>Laptop</option>
+                                <option value="UPS">UPS</option>
+                                <option value="Printer">Printer</option>
+                                <option value="Network Device">Network Device</option>
+                                <option value="TV">TV</option>
+                                <option value="Air Conditioner">Air Conditioner</option>
+                                <option value="IP Phone">IP Phone</option>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Boardroom Accessory">Boardroom Accessory</option>
+                                <option value="CCTV Camera">CCTV Camera</option>
+                                <option value="Software License">Software License</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="formDepartment">Department</label>
+                            <input type="text" id="formDepartment" class="form-control" placeholder="e.g. Research">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group">
+                            <label class="form-label" for="formModel">Model / Description</label>
+                            <input type="text" id="formModel" class="form-control" placeholder="e.g. Dell Latitude 5420">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="formSerial">Serial Number</label>
+                            <input type="text" id="formSerial" class="form-control" placeholder="e.g. SN-00123">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="formStatus">Status</label>
+                            <select id="formStatus" class="form-control">
+                                <option value="Working">Working</option>
+                                <option value="Requires Servicing">Requires Servicing</option>
+                                <option value="In Store">In Store</option>
+                                <option value="Decommissioned">Decommissioned</option>
+                                <option value="Faulty">Faulty</option>
+                                <option value="Obsolete">Obsolete</option>
+                                <option value="Not Serviceable">Not Serviceable</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="formAssignedTo">Assigned To</label>
+                            <input type="text" id="formAssignedTo" class="form-control" placeholder="e.g. Dr. Mutuma Ruteere">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="formNotes">Notes</label>
+                    <textarea id="formNotes" class="form-control" rows="2" placeholder="Additional info…"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" id="closeModalBtn2">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveAssetBtn">Save Asset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="../../assets/js/ui.js"></script>
+    <script src="../../assets/js/api.js"></script>
+    <script src="../../assets/js/session.js"></script>
+    <script src="../../assets/js/sidebar.js"></script>
+    <script src="../../assets/js/notifications.js"></script>
+    <script src="../../assets/js/assets-module.js"></script>
+    <script>
+        (async function () {
+            const session = await initAuthenticatedPage();
+            if (!session) return;
+
+            // ============================================================
+            //  ASSET DATA — extracted from the provided Excel (16 July 2026)
+            // ============================================================
+        const ASSET_DATA = [
+            // ── DESKTOP COMPUTERS ──
+            { tag: 'No Tag', category: 'Desktop', department: "Director's Office", model: 'All-in-One Desktop',
+                serial: '1HF5330CHZ', status: 'Working', assigned: 'Dr. Mutuma Ruteere', notes: '' },
+            { tag: 'DIRSEC-CPU01', category: 'Desktop', department: "Director's Front Office", model: 'Desktop PC',
+                serial: 'CZC139025Z', status: 'Working', assigned: 'Director Front Office Desk', notes: '' },
+            { tag: 'DIRSEC-CPU02', category: 'Desktop', department: "Director's Front Office", model: 'Desktop PC',
+                serial: 'SGH236S4L8', status: 'Working', assigned: 'Ms. Lynah Atieno', notes: '' },
+            { tag: 'OCD-COMP-CPU01', category: 'Desktop', department: 'Research', model: 'Desktop PC',
+                serial: 'TRF6110P41', status: 'Working', assigned: 'Mr. Stephen Muteti', notes: '' },
+            { tag: 'NCRC/COMP/014', category: 'Desktop', department: 'Research', model: 'Desktop PC',
+                serial: 'SGH236S4DR', status: 'Working', assigned: 'Mr. Vincent Opondo', notes: '' },
+            { tag: 'ICT1STFLR-COMP-CPU02', category: 'Desktop', department: 'Research', model: 'Desktop PC',
+                serial: 'CZC6207XOK', status: 'Working', assigned: 'Dr. Dickson Gitonga', notes: '' },
+            { tag: 'NCRC/COMP/024', category: 'Desktop', department: 'Research', model: 'Desktop PC',
+                serial: '4CE10911PW', status: 'Working', assigned: 'Research Pool 1', notes: '' },
+            { tag: 'SITURM- COMP-CPU011', category: 'Desktop', department: 'Research', model: 'Desktop PC',
+                serial: 'TRF6110P2H', status: 'Working', assigned: 'Research Pool 2', notes: '' },
+            { tag: 'No Tag', category: 'Desktop', department: 'Research', model: 'Desktop PC', serial: '32K2D4J',
+                status: 'Working', assigned: 'Research Pool 3', notes: '' },
+            { tag: 'SITURM-COMP-CPU008', category: 'Desktop', department: 'Research', model: 'Desktop PC',
+                serial: 'TRF6110PKC', status: 'Working', assigned: 'Research Pool 4', notes: '' },
+            { tag: 'SITURM-COMP-CPU009', category: 'Desktop', department: 'Research', model: 'Desktop PC',
+                serial: '4CE109136L', status: 'Working', assigned: 'Research Pool 5', notes: '' },
+            { tag: 'SITURM-COMP-005', category: 'Desktop', department: 'Research', model: 'Desktop PC',
+                serial: '71K2D4J', status: 'Working', assigned: 'Research Pool 6', notes: '' },
+            { tag: 'siturm-comp-cpu003', category: 'Desktop', department: 'Research', model: 'Desktop PC',
+                serial: '4CE109124W', status: 'Working', assigned: 'Research pool 7', notes: '' },
+            { tag: 'STURM-COMP-CPU002', category: 'Desktop', department: 'Research', model: 'Desktop PC',
+                serial: 'CZC1390263', status: 'Working', assigned: 'Research Pool 8', notes: '' },
+            { tag: 'SITURM-COMP-CPU001', category: 'Desktop', department: 'Research', model: 'Desktop PC',
+                serial: '4CE109128C', status: 'Working', assigned: 'Research Pool 9', notes: '' },
+            { tag: 'HR-COMP-CPU01', category: 'Desktop', department: 'HR', model: 'Desktop PC', serial: '4CE109139D',
+                status: 'Working', assigned: 'Mr. Ronald Ruwa', notes: '' },
+            { tag: 'ADMIN-COMP-CPU02', category: 'Desktop', department: 'HR', model: 'Desktop PC', serial: 'AUD54908HO',
+                status: 'Working', assigned: 'Payroll', notes: '' },
+            { tag: 'ADMIN-COMP-CPU02', category: 'Desktop', department: 'HR', model: 'Desktop PC', serial: 'CZC62093FH',
+                status: 'Working', assigned: 'Mr. John Kipkoros', notes: '' },
+            { tag: 'SECUR-COMP-CPU01', category: 'Desktop', department: 'HR', model: 'Desktop PC', serial: 'TRF6110PLF',
+                status: 'Working', assigned: 'Ms. Gloria Jemutai Kiprotich', notes: '' },
+            { tag: 'LBRY-COMP-CPU01', category: 'Desktop', department: 'HR', model: 'Desktop PC', serial: 'TRF6110PHZ',
+                status: 'Working', assigned: 'HR Intern', notes: '' },
+            { tag: 'FINANCE-COMPCPU-01', category: 'Desktop', department: 'Finance', model: 'Desktop PC',
+                serial: '8CG85060ZH', status: 'Working', assigned: 'Mr. Samwel Nganga', notes: '' },
+            { tag: 'ACC-CPU-07', category: 'Desktop', department: 'Accounts', model: 'Desktop PC', serial: '8CG8506114',
+                status: 'Working', assigned: 'Ms. Teresia Wanja', notes: '' },
+            { tag: 'ICT1STFLR-MNTOR-CPU02', category: 'Desktop', department: 'Finance', model: 'Desktop PC',
+                serial: 'AUD6120G7Q', status: 'Working', assigned: 'Accounts Intern', notes: '' },
+            { tag: 'GRND-COMP-CPU01', category: 'Desktop', department: 'Reception', model: 'Desktop PC',
+                serial: 'CZC1402Z8Q', status: 'Working', assigned: 'Ms. Ruth Wangare', notes: '' },
+            { tag: 'SUPCHM-1FlR- CPU01', category: 'Desktop', department: 'Procurement', model: 'Desktop PC',
+                serial: 'TRF6110PDZ', status: 'Working', assigned: 'Mr. Kennedy Kwambai', notes: '' },
+            { tag: 'SUPPCHN1STFLR-COMP-CPU02', category: 'Desktop', department: 'Procurement', model: 'Desktop PC',
+                serial: 'TRF6110P37', status: 'Working', assigned: 'Mr. Mamo Shamo', notes: '' },
+            { tag: 'SUPPCHNB-CPU01', category: 'Desktop', department: 'Procurement', model: 'Desktop PC',
+                serial: 'TPF6110P8M', status: 'Working', assigned: 'Mr. Collins Omondi', notes: '' },
+            { tag: 'AUDIT-COMP-CPU01', category: 'Desktop', department: 'Audit', model: 'Desktop PC',
+                serial: 'CZC1117GLH', status: 'Working', assigned: 'Mr. Simon Ndahi Ndiritu', notes: '' },
+            { tag: 'DIROFF-COMP-CPU01', category: 'Desktop', department: 'Information Management', model: 'Desktop PC',
+                serial: 'AUD4400256', status: 'Working', assigned: 'Mr. Maxwell Okoth Frank', notes: '' },
+            { tag: 'ICT1STFLR-COMP-CPU01', category: 'Desktop', department: 'ICT', model: 'Desktop PC',
+                serial: 'AUD6100FFC', status: 'Working', assigned: 'Ms. Rose Weru', notes: '' },
+            { tag: 'ICT1STFLR-COMP-MONITOR03', category: 'Desktop', department: 'ICT', model: 'Desktop PC',
+                serial: 'AUD53903QF', status: 'Working', assigned: 'Ms. Violet Kirui', notes: '' },
+            { tag: 'SITURM- COMP-CPU003', category: 'Desktop', department: 'ICT', model: 'Desktop PC',
+                serial: 'CZC1117GN1', status: 'Working', assigned: 'ICT INTERN 1', notes: '' },
+            { tag: 'SITURM- COMP-CPU007', category: 'Desktop', department: 'ICT', model: 'Desktop PC',
+                serial: '4CE109124W', status: 'Working', assigned: 'ICT INTERN 2', notes: '' },
+
+            // ── LAPTOPS ──
+            { tag: '5CD2021V2M', category: 'Laptop', department: "Director's Office", model: 'Laptop',
+                serial: '5CD2021V2M', status: 'Working', assigned: 'Dr. Mutuma Ruteere', notes: '' },
+            { tag: 'SCD122BBRR', category: 'Laptop', department: 'Research', model: 'Laptop', serial: 'SCD122BBRR',
+                status: 'Working', assigned: 'Mr. Stephen Muteti', notes: '' },
+            { tag: 'SCD122BBX2', category: 'Laptop', department: 'Research', model: 'Laptop', serial: 'SCD122BBX2',
+                status: 'Working', assigned: 'Mr. Vincent Opondo', notes: '' },
+            { tag: '5CD5151LQL', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD5151LQL',
+                status: 'Working', assigned: 'Dr. Fred Nasubo', notes: '' },
+            { tag: 'CND53914GN', category: 'Laptop', department: 'Research', model: 'Laptop', serial: 'CND53914GN',
+                status: 'Working', assigned: 'Ms. Phyllis Wanjiku', notes: '' },
+            { tag: 'CND53914DT', category: 'Laptop', department: 'Research', model: 'Laptop', serial: 'CND53914DT',
+                status: 'Working', assigned: 'Mr. Isaiah Ndege', notes: '' },
+            { tag: '5CD5174HZJ', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD5174HZJ',
+                status: 'Working', assigned: 'Dr. Julius Mwangi', notes: '' },
+            { tag: '5CD5151LTL', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD5151LTL',
+                status: 'Working', assigned: 'Dr. Florence Chizi Tsuma', notes: '' },
+            { tag: '5CD5151LT0', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD5151LT0',
+                status: 'Working', assigned: 'Dr. Graham Amakanji', notes: '' },
+            { tag: '5CD5151LRL', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD5151LRL',
+                status: 'Working', assigned: 'Mr. Erick Bulugosi Mulama', notes: '' },
+            { tag: '5CD5151LVG', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD5151LVG',
+                status: 'Working', assigned: 'Ms. Caroline Njeri Kirichu', notes: '' },
+            { tag: '5CD5174J1J', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD5174J1J',
+                status: 'Working', assigned: 'Ms. Nancy Bor', notes: '' },
+            { tag: '5CD5151LSN', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD5151LSN',
+                status: 'Working', assigned: 'Mr. Duncan Kishoyian', notes: '' },
+            { tag: '5CD5151LR6', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD5151LR6',
+                status: 'Working', assigned: 'Mr. Mohammed Ramadhan Mafta', notes: '' },
+            { tag: '5CD515LLTV', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD515LLTV',
+                status: 'Working', assigned: 'Mr. Eric Kwena', notes: '' },
+            { tag: '5CD5174HZP', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD5174HZP',
+                status: 'Working', assigned: 'Ms. Selina Makokha Kwamini', notes: '' },
+            { tag: '5CD5151LQ9', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD5151LQ9',
+                status: 'Working', assigned: 'Mr. Paul Regina Mungai', notes: '' },
+            { tag: '5CD5151LST', category: 'Laptop', department: 'Research', model: 'Laptop', serial: '5CD5151LST',
+                status: 'Working', assigned: 'Mr. William Mulei Musili', notes: '' },
+            { tag: '5CD5151LQC', category: 'Laptop', department: 'HR', model: 'Laptop', serial: '5CD5151LQC',
+                status: 'Working', assigned: 'Ms. Agnes Kupa', notes: '' },
+            { tag: 'CND53914J8', category: 'Laptop', department: 'HR', model: 'Laptop', serial: 'CND53914J8',
+                status: 'Working', assigned: 'Mr. Ronald Ruwa', notes: '' },
+            { tag: 'CND53914FX', category: 'Laptop', department: 'HR', model: 'Laptop', serial: 'CND53914FX',
+                status: 'Working', assigned: 'Mr. Edison Cheruiyot', notes: '' },
+            { tag: '7E060295H', category: 'Laptop', department: 'Library', model: 'Laptop', serial: '7E060295H',
+                status: 'Working', assigned: 'Intern (Library)', notes: '' },
+            { tag: '5CB120342R', category: 'Laptop', department: 'Library', model: 'Laptop', serial: '5CB120342R',
+                status: 'Working', assigned: 'Intern (Library)', notes: '' },
+            { tag: 'CNU1062PX6', category: 'Laptop', department: 'Library', model: 'Laptop', serial: 'CNU1062PX6',
+                status: 'Working', assigned: 'Intern (Library)', notes: '' },
+            { tag: '5CD5151LSK', category: 'Laptop', department: 'Finance', model: 'Laptop', serial: '5CD5151LSK',
+                status: 'Working', assigned: 'Ms. Grace Musyoka', notes: '' },
+            { tag: 'SCD122BBYN', category: 'Laptop', department: 'Finance', model: 'Laptop', serial: 'SCD122BBYN',
+                status: 'Working', assigned: 'Mr. Samuel Nganga', notes: '' },
+            { tag: '5CD6338CGZ', category: 'Laptop', department: 'Corporate Communications', model: 'Laptop',
+                serial: '5CD6338CGZ', status: 'Working', assigned: 'Ms. Nancy Naburuki', notes: '' },
+            { tag: 'C02RNTQVG8WP', category: 'Laptop', department: 'Corporate Communications', model: 'MacBook',
+                serial: 'C02RNTQVG8WP', status: 'Working', assigned: 'Ms. Nancy Naburuki', notes: '' },
+            { tag: '5CD5174J1M', category: 'Laptop', department: 'Corporate Communications', model: 'Laptop',
+                serial: '5CD5174J1M', status: 'Working', assigned: 'Ms. Seline Achieng Nyangare', notes: '' },
+            { tag: '5CD6338C8T', category: 'Laptop', department: 'Supply Chain Management', model: 'Laptop',
+                serial: '5CD6338C8T', status: 'Working', assigned: 'Mr. Kennedy Kwambai', notes: '' },
+            { tag: '2CE24429YQ', category: 'Laptop', department: 'Procurement', model: 'Laptop', serial: '2CE24429YQ',
+                status: 'Working', assigned: 'Mr. Collince Omondi', notes: '' },
+            { tag: '5CD5151LTQ', category: 'Laptop', department: 'Procurement', model: 'Laptop', serial: '5CD5151LTQ',
+                status: 'Working', assigned: 'Mr. Mamo Shamo', notes: '' },
+            { tag: 'CNU1062PPQ', category: 'Laptop', department: 'Procurement', model: 'Laptop', serial: 'CNU1062PPQ',
+                status: 'Working', assigned: 'Intern Procurement', notes: '' },
+            { tag: '3CD6338C7L', category: 'Laptop', department: 'Legal', model: 'Laptop', serial: '3CD6338C7L',
+                status: 'Working', assigned: 'Ms. Mwai Wanjiku', notes: '' },
+            { tag: '5CD5151LTM', category: 'Laptop', department: 'Legal', model: 'Laptop', serial: '5CD5151LTM',
+                status: 'Working', assigned: 'Ms. Faith Cherop', notes: '' },
+            { tag: '5CD6338CH6', category: 'Laptop', department: 'Audit', model: 'Laptop', serial: '5CD6338CH6',
+                status: 'Working', assigned: 'Mr. Simon Ndahi Ndiritu', notes: '' },
+            { tag: '5CD5151LVH', category: 'Laptop', department: 'Information Management', model: 'Laptop',
+                serial: '5CD5151LVH', status: 'Working', assigned: 'Dr. Samuel Macharia Were', notes: '' },
+            { tag: '5CD2021VID', category: 'Laptop', department: 'ICT', model: 'Laptop', serial: '5CD2021VID',
+                status: 'Working', assigned: 'Rose Weru', notes: '' },
+            { tag: 'CNU121000T', category: 'Laptop', department: 'ICT', model: 'Laptop', serial: 'CNU121000T',
+                status: 'Working', assigned: 'ICT Interns', notes: '' },
+
+            // ── UPS ──
+            { tag: '2510260901576', category: 'UPS', department: "Director's Office", model: 'UPS',
+                serial: '2510260901576', status: 'Working', assigned: 'Dr. Mutuma Ruteere', notes: '' },
+            { tag: '242006509843', category: 'UPS', department: 'Finance', model: 'UPS', serial: '242006509843',
+                status: 'Working', assigned: 'Mr. Samwuel Ng\'ang\'a', notes: '' },
+            { tag: 'NCRC/UPS/020', category: 'UPS', department: 'Accounts', model: 'UPS', serial: 'NCRC/UPS/020',
+                status: 'Working', assigned: 'Ms. Teresia Wanja', notes: '' },
+            { tag: 'TAG-ICT1STFLR-COMP-UPS01', category: 'UPS', department: 'ICT', model: 'ME-650-VUA',
+                serial: 'TAG-ICT1STFLR-COMP-UPS01', status: 'Working', assigned: 'ICT Server/1st floor', notes: '' },
+            { tag: 'SVRMGRNDFL-UPS01', category: 'UPS', department: 'ICT', model: 'UPS', serial: 'SVRMGRNDFL-UPS01',
+                status: 'Working', assigned: 'ICT Server/Grd floor', notes: '' },
+            { tag: 'No Tag', category: 'UPS', department: 'Board Room', model: 'UPS', serial: 'No Tag',
+                status: 'Working', assigned: 'Board Room Cabinet', notes: '' },
+            { tag: 'BRDRM-PROJECTOR01', category: 'UPS', department: 'Board Room', model: 'Projector UPS',
+                serial: 'BRDRM-PROJECTOR01', status: 'Working', assigned: 'Board Room Projector', notes: '' },
+            { tag: '242006509682', category: 'UPS', department: 'Research', model: 'UPS', serial: '242006509682',
+                status: 'Working', assigned: 'Mr. Stephen Muteti', notes: '' },
+            { tag: 'NCRC/UPS/019', category: 'UPS', department: 'Information Management', model: 'UPS',
+                serial: 'NCRC/UPS/019', status: 'Working', assigned: 'Mr. Maxwell Okoth Frank', notes: '' },
+
+            // ── PRINTERS & COPIERS ──
+            { tag: 'LIBRY-COMP-PRINTER01', category: 'Printer', department: 'Resource Centre',
+                model: 'KYOCERA TASKFA6002i', serial: 'W316800430', status: 'Working', assigned: 'NCRC Staff',
+                notes: 'Heavy Duty Printer/Copier' },
+            { tag: 'DROFF-COMP-PRINTER01', category: 'Printer', department: "Director's Office",
+                model: 'HP Laserjet CP1525dn Color', serial: 'CNCF331633', status: 'Working', assigned: 'Director/CEO',
+                notes: '' },
+            { tag: 'DROFF-COMP-PRINTER01', category: 'Printer', department: "Director's Office",
+                model: 'HP Color Laserjet CP3525n', serial: 'CNCTC4N1YB', status: 'Working',
+                assigned: 'Director Front Office', notes: '' },
+            { tag: 'NEW (TO BE TAGGED)', category: 'Printer', department: "Director's Office",
+                model: 'KYOCERA ECOSYS MA4000cix', serial: 'H7Y6319751', status: 'Working',
+                assigned: 'Director Front Office 2', notes: '' },
+            { tag: 'ACC-COMP-PRINTER01', category: 'Printer', department: 'Finance', model: 'HP Laserjet Enterprise M607',
+                serial: 'CNB8N2C5Y9', status: 'Working', assigned: 'Mr. Samuel Ng\'ang\'a', notes: '' },
+            { tag: 'HR-COMP-PRINTER01', category: 'Printer', department: 'HR', model: 'HP Laserjet P2055dn',
+                serial: 'VNC3X18872', status: 'Working', assigned: 'Mr. Ronald Ruwa', notes: '' },
+            { tag: 'AUDIT-COMP-PRINTER01', category: 'Printer', department: 'Audit', model: 'HP Laserjet P2055dn',
+                serial: 'VNC3M09281', status: 'Working', assigned: 'Mr. Simon Ndahi Ndiritu', notes: '' },
+            { tag: 'ADMIN-COMP-PRINTER01', category: 'Printer', department: 'HR', model: 'HP Color Laserjet PRO MFP M477fdn',
+                serial: 'VNB8JCMB6N', status: 'Working', assigned: 'Mr. John KipKoros', notes: '' },
+            { tag: 'OCDPRINT-PRINTER01', category: 'Printer', department: 'Research', model: 'HP Laserjet P2055dn',
+                serial: 'VNC3J08783', status: 'Working', assigned: 'Mr. Stephen Muteti', notes: '' },
+            { tag: 'OCDPRINT-PRINTER0', category: 'Printer', department: 'Research', model: 'HP Laserjet P2055dn',
+                serial: 'CNCGB95929', status: 'Working', assigned: 'Mr. Vincent Opondo', notes: '' },
+            { tag: 'SUPPCHN1STFLR-PRINTER01', category: 'Printer', department: 'Procurement',
+                model: 'HP Laserjet P2055dn', serial: 'CNC1C42127', status: 'Working', assigned: 'Mr. Kennedy Kwambai',
+                notes: '' },
+            { tag: 'ACCFIN-COMP-PRINTER01', category: 'Printer', department: 'Cash Office', model: 'HP Laserjet P2055dn',
+                serial: 'CNCF707104', status: 'Working', assigned: 'Ms. Teresia Wanja', notes: '' },
+            { tag: 'DROFFW-COMP-PRINTER01', category: 'Printer', department: "Director's Office",
+                model: 'HP Color Laserjet ProMFP M477fdn', serial: 'VNB8JCM9VZ', status: 'Requires Servicing',
+                assigned: 'Director Front Office 3', notes: '' },
+
+            // ── NETWORK DEVICES (Server & Wifi) ──
+            { tag: 'Serverroom groundfloor-mntr02', category: 'Network Device', department: 'Server Room',
+                model: 'ELITE DESK Monitor', serial: 'CNK5290K7Q', status: 'Working', assigned: 'ACMC/ANALYTICS',
+                notes: 'Monitor' },
+            { tag: 'No Tag', category: 'Network Device', department: 'Server Room', model: 'ELITE DESK CPU',
+                serial: 'SGH542SPPQ', status: 'Working', assigned: 'ACMC/ANALYTICS', notes: 'CPU' },
+            { tag: 'sverrmgmdflr-keybrd 01', category: 'Network Device', department: 'Server Room', model: 'Keyboard',
+                serial: 'sverrmgmdflr-keybrd 01', status: 'Working', assigned: 'ACMC/ANALYTICS', notes: '' },
+            { tag: 'Sverrmgrndfrl-mmtr1', category: 'Network Device', department: 'Server Room', model: 'ELITE DESK Monitor',
+                serial: '3CQ6210K13', status: 'Working', assigned: 'NCRCAPH', notes: '' },
+            { tag: 'svrmgrndfl-comp-cpu01', category: 'Network Device', department: 'Server Room', model: 'Desktop',
+                serial: 'AUD449036Y', status: 'Working', assigned: 'NCRCAPH', notes: '' },
+            { tag: 'svrmgrndfl-comp-keybr01', category: 'Network Device', department: 'Server Room', model: 'Keyboard',
+                serial: 'svrmgrndfl-comp-keybr01', status: 'Working', assigned: 'NCRCAPH', notes: '' },
+            { tag: 'NCRC/Com_Serv/002', category: 'Network Device', department: 'Server Room', model: 'Cabinet 9U',
+                serial: 'NCRC/Com_Serv/002', status: 'Working', assigned: 'Ground Floor Server Room', notes: '' },
+            { tag: 'SVERRM-SWITCH03', category: 'Network Device', department: 'Server Room',
+                model: 'CISCO C2960X-48LPS-L', serial: 'FOC1916S40L', status: 'Working',
+                assigned: 'Ground Floor Switch Label1', notes: '' },
+            { tag: 'SVERRM-SWITCH04', category: 'Network Device', department: 'Server Room', model: 'CISCO 2960',
+                serial: 'FCW2004A0YU', status: 'Working', assigned: 'Ground Floor Switch Label2', notes: '' },
+            { tag: 'No Tag', category: 'Network Device', department: 'Server Room', model: 'CISCO 2900 Router',
+                serial: 'FGL20221109', status: 'Working', assigned: 'Router', notes: '' },
+            { tag: 'NCRC/UPS/026', category: 'Network Device', department: 'Server Room', model: 'Smart UPS 3000RMI2U',
+                serial: 'SMT3000RMI2U', status: 'Working', assigned: 'Ground Floor Server Room', notes: '' },
+            { tag: 'GRND-ROUTER01', category: 'Network Device', department: 'Reception', model: 'UBIQUITI AP',
+                serial: '1650GF09FC256EA69', status: 'Working', assigned: 'WIFI 1 Reception', notes: '' },
+            { tag: 'GRNDFLR-WIFI-ROUTER02', category: 'Network Device', department: 'Ground Floor',
+                model: 'UBIQUITI AP', serial: '1501K0418D6CA41CB', status: 'Working',
+                assigned: 'WIFI 2 from Deputy Director', notes: '' },
+            { tag: 'No Tag', category: 'Network Device', department: 'Board Room', model: 'UBIQUITI AP',
+                serial: '1703GF09FC2809A46', status: 'Working', assigned: 'WIFI 2 BoardRoom', notes: '' },
+            { tag: '1STFLR-WIFI-ROUTER01', category: 'Network Device', department: 'Board Room', model: 'UBIQUITI AP',
+                serial: '1905GFCECDA68F6B0', status: 'Working', assigned: 'WIFI BoardRoom Kitchen', notes: '' },
+            { tag: '1STFLR-WIFI-ROUTER02', category: 'Network Device', department: 'Board Room', model: 'UBIQUITI AP',
+                serial: '1905GFCECDA68F82E', status: 'Working', assigned: 'WIFI BoardRoom Entry', notes: '' },
+            { tag: 'No Tag', category: 'Network Device', department: 'Situation Room', model: 'UBIQUITI AP',
+                serial: '1703GF09FC280997B', status: 'Working', assigned: 'WIFI Situation Room', notes: '' },
+            { tag: 'SVERRM-Cabinet 01', category: 'Network Device', department: 'Server Room', model: 'Cisco 42U Cabinet',
+                serial: 'SVERRM-Cabinet 01', status: 'Working', assigned: '1st Floor Cabinet', notes: '' },
+            { tag: 'New switch', category: 'Network Device', department: 'Server Room', model: 'CISCO C9200-DN-E-24',
+                serial: 'FD01321X23P', status: 'Working', assigned: 'SWITCH 1', notes: '' },
+            { tag: 'SVERRM-COMP-UPS01', category: 'Network Device', department: 'Server Room', model: 'CISCO 2960',
+                serial: 'FCW2004A0YU', status: 'Working', assigned: 'SWITCH 2', notes: '' },
+            { tag: 'SVERRM-SWITCH01', category: 'Network Device', department: 'Server Room', model: 'SG200-26P',
+                serial: 'DNI2223016N', status: 'Working', assigned: 'SWITCH 3', notes: '' },
+            { tag: 'SVERRM-SWITCH03', category: 'Network Device', department: 'Server Room', model: 'CISCO C1500 UPS',
+                serial: 'SMC15001-24', status: 'Working', assigned: 'Heavy Duty UPS', notes: '' },
+            { tag: 'SVRMGRNDFL-TELKOM-RTER1', category: 'Network Device', department: 'Server Room',
+                model: 'Huawei Router', serial: 'EFY7S19C04000860', status: 'Working', assigned: 'Telkom Router',
+                notes: '' },
+
+            // ── TV SETS ──
+            { tag: 'DIROFF-TV-SET01', category: 'TV', department: "Director's Office", model: 'Sony TV',
+                serial: '1319785', status: 'Working', assigned: 'Director', notes: '' },
+            { tag: 'RECEPT-TV-SET01', category: 'TV', department: 'Reception', model: 'Sony TV', serial: '1319788',
+                status: 'Working', assigned: 'Reception', notes: '' },
+            { tag: 'SITURM-TV-SET01', category: 'TV', department: 'Research Pool', model: 'Sony TV', serial: '4120111',
+                status: 'Working', assigned: 'Research Pool', notes: '' },
+
+            // ── AIR CONDITIONERS ──
+            { tag: 'PDRM-AIR-COND01', category: 'Air Conditioner', department: 'Boardroom',
+                model: 'GFH18K3HI 18000 BTU', serial: '63270050334', status: 'Working', assigned: 'Boardroom 01',
+                notes: 'Indoor' },
+            { tag: 'BDRM-AIR-COND02', category: 'Air Conditioner', department: 'Boardroom',
+                model: 'GFH18K3HI 18000 BTU', serial: '63270050334', status: 'Working', assigned: 'Boardroom 02',
+                notes: 'Indoor' },
+            { tag: 'ADVOASS-AIR-COND01', category: 'Air Conditioner', department: "Director's Office",
+                model: 'S18C0C', serial: '705CTWC00753', status: 'Working', assigned: 'Director Office', notes: '' },
+            { tag: 'SVERRM-AIR-COND01', category: 'Air Conditioner', department: 'Server Room', model: 'GFH12K3HI',
+                serial: '600004002', status: 'Working', assigned: '1st Floor Server Room', notes: '' },
+            { tag: 'SITURM-AIR-COND01', category: 'Air Conditioner', department: 'Research Pool',
+                model: '17060 B.T.U 73PKM', serial: '703KCBD0ZE81', status: 'Working', assigned: 'Research Pool',
+                notes: '' },
+            { tag: 'No Tag', category: 'Air Conditioner', department: 'Server Room', model: 'US-H246T4A1',
+                serial: '002HABZ95453', status: 'Working', assigned: 'Ground Floor Server Room', notes: '' },
+
+            // ── TABLETS ──
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A8', serial: 'R8YW80NH9GJ',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361230181' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A9', serial: 'R8YW20KFAVA',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353289761217969' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A10', serial: 'R8YW80XLJ4W',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361480463' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A11', serial: 'R8YW80XMFBH',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361490439' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A12', serial: 'R8YW81AI8ZW',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361778551' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A13', serial: 'R8YW414F3GR',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353289766044442' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A14', serial: 'R8YW80XLLJB',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361481263' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A15', serial: 'R8YW80XLLNZ',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255367481305' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A16', serial: 'R8YW80XLW1V',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255367484061' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A17', serial: 'R8YW414F2NT',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353289766044178' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A18', serial: 'R8YW81AE19M',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361776019' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A19', serial: 'R8YW80XLVMT',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361483939' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A20', serial: 'R8YW8OXKT1R',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361472510' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A21', serial: 'R8YW80NH9PX',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361230256' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A22', serial: 'R8YW80XL81B',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361477139' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A23', serial: 'R8YW81AEIJE',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361776100' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A24', serial: 'R8YW80XLQMP',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361482618' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A25', serial: 'R8YW80NH76R',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361229423' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A26', serial: 'R8YW80XLKXL',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361481057' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A27', serial: 'R8YW40AF34E',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353289764548337' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A28', serial: 'R8YW81AEILF',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361776126' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A29', serial: 'R8YW81AE1HT',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361776092' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A30', serial: 'R8YW80XLLAW',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361481180' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A31', serial: 'R8YW80XLW4N',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353255361484093' },
+            { tag: 'No Tag', category: 'Tablet', department: 'ICT', model: 'Galaxy Tab A32', serial: 'R8YW40AFIFT',
+                status: 'In Store', assigned: 'Unassigned', notes: 'IMEI: 353289764547784' },
+
+            // ── BOARDROOM ACCESSORIES ──
+            { tag: 'NCRC/COMP-Server/003', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: '9U PABX Cabinet', serial: 'NCRC/COMP-Server/003', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'NCRC/IP-Desk-Phone/028', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Board Room IP Phone', serial: 'NCRC/IP-Desk-Phone/028', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'NCRC/IP-Speaker/001', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'IP Phone Speaker 1', serial: 'NCRC/IP-Speaker/001', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'NCRC/IP-Speaker/001', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'IP Phone Speaker 2', serial: 'NCRC/IP-Speaker/001', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'BRDRM-SWITCHES001', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Wireless Receiver 8', serial: 'BRDRM-SWITCHES001', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'BRDRM-SWITCHES002', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Wireless Receive 7', serial: 'BRDRM-SWITCHES002', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'BRDRM-SWITCHES003', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Wireless Receive 6', serial: 'BRDRM-SWITCHES003', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'NCRC/PABX-System/005', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Wireless Receive 5', serial: 'NCRC/PABX-System/005', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'BRDRM-PABX01', category: 'Boardroom Accessory', department: 'Boardroom', model: 'Amplifier',
+                serial: 'BRDRM-PABX01', status: 'Working', assigned: 'Boardroom', notes: '' },
+            { tag: 'NCRCPROJECTOR-Stanf /001', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'White Board', serial: 'NCRCPROJECTOR-Stanf /001', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'NCRC/BR_SCRN/001', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Projector Wallscreen', serial: 'X4GB8800713', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'BRDRM-CONFER-MIC001', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Table Microphone 1', serial: 'No SN', status: 'Working', assigned: 'Boardroom', notes: '' },
+            { tag: 'BRDRMCONFERMIC002', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Table Microphone 2', serial: 'No SN', status: 'Working', assigned: 'Boardroom', notes: '' },
+            { tag: 'BDR-MICROPHONE002', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Table Microphone 3', serial: 'No SN', status: 'Working', assigned: 'Boardroom', notes: '' },
+            { tag: 'BRDRMCONFERMIC002', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Table Microphone 4', serial: 'No SN', status: 'Working', assigned: 'Boardroom', notes: '' },
+            { tag: 'BRDRM-CONFERMIC003', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Table Microphone 5', serial: 'No SN', status: 'Working', assigned: 'Boardroom', notes: '' },
+            { tag: 'BRDRM-CONFERMIC004', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Table Microphone 6', serial: 'No SN', status: 'Working', assigned: 'Boardroom', notes: '' },
+            { tag: 'BRDRM-CONFERMIC005', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Table Microphone 7', serial: 'No SN', status: 'Working', assigned: 'Boardroom', notes: '' },
+            { tag: 'BDR-MICROPHONE008', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Table Microphone 8', serial: 'No SN', status: 'Working', assigned: 'Boardroom', notes: '' },
+            { tag: 'BRDRM-CONFERMIC009', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Table Microphone 9', serial: 'No SN', status: 'Working', assigned: 'Boardroom', notes: '' },
+            { tag: 'No Tag', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Digital Wireless Mic 10', serial: 'ES400C0N-610.500', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'No Tag', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Digital Wireless Mic 11', serial: 'ES400C0N-633.500', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'No Tag', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Digital Wireless Mic 12', serial: 'ES400C0N-656.500', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'No Tag', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Digital Wireless Mic 13', serial: 'ES400C0N-679.500', status: 'Working', assigned: 'Boardroom',
+                notes: '' },
+            { tag: 'No Tag', category: 'Boardroom Accessory', department: 'Boardroom', model: 'External Speakers (6)',
+                serial: 'No SN', status: 'Working', assigned: 'Boardroom', notes: 'Ceiling speakers' },
+            { tag: 'ICT1STFLR-CAMERA01', category: 'Boardroom Accessory', department: 'Boardroom',
+                model: 'Poly Studio Camera', serial: '8G20505A6F18F9', status: 'Working', assigned: 'Boardroom',
+                notes: 'Video Conference Camera' },
+            { tag: 'BDRM-TV-STAND01', category: 'Boardroom Accessory', department: 'Boardroom', model: 'Camera Stand',
+                serial: 'Stand', status: 'Working', assigned: 'Boardroom', notes: '' },
+
+            // ── CCTV CAMERAS ──
+            { tag: 'No Tag', category: 'CCTV Camera', department: 'Reception', model: 'DH-IPC-T1E29-A-IL',
+                serial: 'CA0309APAG9B4A4', status: 'Working', assigned: 'Camera 1 Ground Floor', notes: '' },
+            { tag: 'No Tag', category: 'CCTV Camera', department: 'Kitchen', model: 'DH-IPC-T1E29-A-IL',
+                serial: 'AE03BC4PAGCEE05', status: 'Working', assigned: 'Camera 2 Ground Floor', notes: '' },
+            { tag: 'No Tag', category: 'CCTV Camera', department: "Director's Office", model: 'DH-IPC-T1E29-A-IL',
+                serial: 'CA0309APAG42F51', status: 'Working', assigned: 'Camera 3 First Floor', notes: '' },
+            { tag: 'No Tag', category: 'CCTV Camera', department: 'Situation Room', model: 'DH-IPC-T1E29-A-IL',
+                serial: 'CA0309APAGC7ABD', status: 'Working', assigned: 'Camera 4 First Floor', notes: '' },
+            { tag: 'No Tag', category: 'CCTV Camera', department: 'Server Room', model: 'DHI-NVR1104HS-P-S3/H',
+                serial: 'CC04577PAJ24862', status: 'Working', assigned: 'Network Video Recorder (NVR)', notes: '' },
+
+            // ── IP PHONES (from IPphone sheet) ──
+            { tag: 'Ext 1038326', category: 'IP Phone', department: "Director's Office", model: 'Cisco IP Phone',
+                serial: '1038326', status: 'Working', assigned: 'Director/CEO', notes: '' },
+            { tag: 'Ext 1038319', category: 'IP Phone', department: "Director's Office", model: 'Cisco IP Phone',
+                serial: '1038319', status: 'Working', assigned: 'CEO Front Office/Sec.', notes: '' },
+            { tag: 'Ext 1038332', category: 'IP Phone', department: "Deputy Director's Office", model: 'Cisco IP Phone',
+                serial: '1038332', status: 'Working', assigned: 'Dr. Tioko Logiron', notes: '' },
+            { tag: 'Ext 1038314', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038314', status: 'Working', assigned: 'Mr. Stephen Muteti', notes: '' },
+            { tag: 'Ext 1038322', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038322', status: 'Working', assigned: 'Mr. Vincent Opondo', notes: '' },
+            { tag: 'Ext 1038306', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038306', status: 'Working', assigned: 'Dr. Julius Mwangi', notes: '' },
+            { tag: 'Ext 1038318', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038318', status: 'Working', assigned: 'Mr. Isaiya Ndege', notes: '' },
+            { tag: 'Ext 1038339', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038339', status: 'Working', assigned: 'Situation Room', notes: '' },
+            { tag: 'Ext 1038311', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038311', status: 'Working', assigned: 'Dr. Fred Nasubo', notes: '' },
+            { tag: 'Ext 1038334', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038334', status: 'Working', assigned: 'Dr. Florence Chizi Tsuma', notes: '' },
+            { tag: 'Ext 1038330', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038330', status: 'Working', assigned: 'Mr. Erick Bulugosi Mulama', notes: '' },
+            { tag: 'Ext 1038301', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038301', status: 'Working', assigned: 'Ms. Caroline Njeri Kirichu', notes: '' },
+            { tag: 'Ext 1038347', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038347', status: 'Working', assigned: 'Dr. Graham Amakanji', notes: '' },
+            { tag: 'Ext 1038343', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038343', status: 'Working', assigned: 'Ms. Nancy Bor', notes: '' },
+            { tag: 'Ext 1038333', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038333', status: 'Working', assigned: 'Mr. Duncan Kishoyian', notes: '' },
+            { tag: 'Ext 1038329', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038329', status: 'Working', assigned: 'Mr. Mohammed Ramadhan Mafta', notes: '' },
+            { tag: 'Ext 1038338', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038338', status: 'Working', assigned: 'Mr. Eric Kwena', notes: '' },
+            { tag: 'Ext 1038348', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038348', status: 'Working', assigned: 'Ms. Selina Makokha Kwamini', notes: '' },
+            { tag: 'Ext 1038349', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038349', status: 'Working', assigned: 'Mr. Paul Regina Mungai', notes: '' },
+            { tag: 'Ext 1038350', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038350', status: 'Working', assigned: 'Mr. William Mulei Musili', notes: '' },
+            { tag: 'Ext 1038320', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038320', status: 'Working', assigned: 'Dr. Dickson Gitonga', notes: '' },
+            { tag: 'Ext 1038312', category: 'IP Phone', department: 'Research', model: 'Cisco IP Phone',
+                serial: '1038312', status: 'Working', assigned: 'Ms. Phyllis Muriuki', notes: '' },
+            { tag: 'Ext 1038327', category: 'IP Phone', department: 'HR', model: 'Cisco IP Phone', serial: '1038327',
+                status: 'Working', assigned: 'Ms. Agnes Kupa', notes: '' },
+            { tag: 'Ext 1038324', category: 'IP Phone', department: 'HR', model: 'Cisco IP Phone', serial: '1038324',
+                status: 'Working', assigned: 'Mr. Ronald Ruwa', notes: '' },
+            { tag: 'Ext 1038323', category: 'IP Phone', department: 'HR', model: 'Cisco IP Phone', serial: '1038323',
+                status: 'Working', assigned: 'Ms. Lynah Otumba', notes: '' },
+            { tag: 'Ext 1038305', category: 'IP Phone', department: 'Administration', model: 'Cisco IP Phone',
+                serial: '1038305', status: 'Working', assigned: 'Mr. John Kipkoros', notes: '' },
+            { tag: 'Ext 1038303', category: 'IP Phone', department: 'Administration', model: 'Cisco IP Phone',
+                serial: '1038303', status: 'Working', assigned: 'Mr. Edison Cheruiyot', notes: '' },
+            { tag: 'Ext 1038302', category: 'IP Phone', department: 'Administration', model: 'Cisco IP Phone',
+                serial: '1038302', status: 'Working', assigned: 'Mr. Edwin Change', notes: '' },
+            { tag: 'Ext 1038336', category: 'IP Phone', department: 'Administration', model: 'Cisco IP Phone',
+                serial: '1038336', status: 'Working', assigned: 'Mr. Eric Waswa', notes: '' },
+            { tag: 'Ext 1038337', category: 'IP Phone', department: 'Administration', model: 'Cisco IP Phone',
+                serial: '1038337', status: 'Working', assigned: 'Mr. Laban Kibet', notes: '' },
+            { tag: 'Ext 1038325', category: 'IP Phone', department: 'Finance', model: 'Cisco IP Phone',
+                serial: '1038325', status: 'Working', assigned: 'Ms. Grace Musyoka', notes: '' },
+            { tag: 'Ext 1038309', category: 'IP Phone', department: 'Finance', model: 'Cisco IP Phone',
+                serial: '1038309', status: 'Working', assigned: 'Mr. Samuel Ng\'ang\'a', notes: '' },
+            { tag: 'Ext 1038341', category: 'IP Phone', department: 'Accounts', model: 'Cisco IP Phone',
+                serial: '1038341', status: 'Working', assigned: 'Ms. Teresia Wanja', notes: '' },
+            { tag: 'Ext 1038316', category: 'IP Phone', department: 'Corporate Communications', model: 'Cisco IP Phone',
+                serial: '1038316', status: 'Working', assigned: 'Ms. Nancy Naburuki', notes: '' },
+            { tag: 'Ext 1038354', category: 'IP Phone', department: 'Corporate Communications', model: 'Cisco IP Phone',
+                serial: '1038354', status: 'Working', assigned: 'Ms. Seline Achieng Nyangare', notes: '' },
+            { tag: 'Ext 1038313', category: 'IP Phone', department: 'Reception', model: 'Cisco IP Phone',
+                serial: '1038313', status: 'Working', assigned: 'Ms. Ruth Wangari', notes: '' },
+            { tag: 'Ext 1038308', category: 'IP Phone', department: 'Supply Chain', model: 'Cisco IP Phone',
+                serial: '1038308', status: 'Working', assigned: 'Mr. Kennedy Kwambai', notes: '' },
+            { tag: 'Ext 1038321', category: 'IP Phone', department: 'Procurement', model: 'Cisco IP Phone',
+                serial: '1038321', status: 'Working', assigned: 'Mr. Collins Omondi', notes: '' },
+            { tag: 'Ext 1038351', category: 'IP Phone', department: 'Procurement', model: 'Cisco IP Phone',
+                serial: '1038351', status: 'Working', assigned: 'Mr. Mamo Shamo', notes: '' },
+            { tag: 'Ext 1038315', category: 'IP Phone', department: 'Legal', model: 'Cisco IP Phone', serial: '1038315',
+                status: 'Working', assigned: 'Ms. Wanjiku Mwai', notes: '' },
+            { tag: 'Ext 1038353', category: 'IP Phone', department: 'Legal', model: 'Cisco IP Phone', serial: '1038353',
+                status: 'Working', assigned: 'Ms. Faith Cherop', notes: '' },
+            { tag: 'Ext 1038317', category: 'IP Phone', department: 'Audit', model: 'Cisco IP Phone', serial: '1038317',
+                status: 'Working', assigned: 'Mr. Simon Ndahi Ndiritu', notes: '' },
+            { tag: 'Ext 1038352', category: 'IP Phone', department: 'Records', model: 'Cisco IP Phone',
+                serial: '1038352', status: 'Working', assigned: 'Ms. Gloria Jemutai Kiprotich', notes: '' },
+            { tag: 'Ext 1038328', category: 'IP Phone', department: 'ICT', model: 'Cisco IP Phone', serial: '1038328',
+                status: 'Working', assigned: 'Ms. Rose Weru', notes: '' },
+            { tag: 'Ext 1038307', category: 'IP Phone', department: 'ICT', model: 'Cisco IP Phone', serial: '1038307',
+                status: 'Working', assigned: 'Ms. Violet Kirui', notes: '' },
+            { tag: 'Ext 1038342', category: 'IP Phone', department: 'Library', model: 'Cisco IP Phone',
+                serial: '1038342', status: 'Working', assigned: 'Library', notes: '' },
+            { tag: 'Ext 1038335', category: 'IP Phone', department: 'Kitchen', model: 'Cisco IP Phone',
+                serial: '1038335', status: 'Working', assigned: 'Kitchen', notes: '' },
+            { tag: 'Ext 1038340', category: 'IP Phone', department: 'Boardroom', model: 'Cisco IP Phone',
+                serial: '1038340', status: 'Working', assigned: 'Boardroom', notes: '' },
+
+            // ── IDLE / DECOMMISSIONED (from Idle Assets sheet) ──
+            { tag: 'Fire Extinguisher (2)', category: 'Other', department: 'Facilities', model: 'Fire Extinguisher',
+                serial: 'None', status: 'Decommissioned', assigned: '—', notes: 'Not serviceable, handed to procurement' },
+            { tag: '242006509309', category: 'UPS', department: 'Idle', model: 'UPS', serial: '242006509309',
+                status: 'Faulty', assigned: '—', notes: 'Handed over to procurement' },
+            { tag: '242006509843', category: 'UPS', department: 'Idle', model: 'UPS', serial: '242006509843',
+                status: 'Faulty', assigned: '—', notes: 'Handed over to procurement (duplicate entry)' },
+            { tag: '242006509778', category: 'UPS', department: 'Idle', model: 'UPS', serial: '242006509778',
+                status: 'Faulty', assigned: '—', notes: 'Handed over to procurement' },
+            { tag: '7E06290H', category: 'Laptop', department: 'Idle', model: 'Toshiba Portege R30',
+                serial: '7E06290H', status: 'Faulty', assigned: '—', notes: 'Handed over to procurement' },
+            { tag: '7E060268H', category: 'Laptop', department: 'Idle', model: 'Toshiba Portege R30',
+                serial: '7E060268H', status: 'Not Serviceable', assigned: '—', notes: 'Handed over to procurement' },
+            { tag: 'EMZ006804980', category: 'Printer', department: 'Idle', model: 'Kyocera TR-6500',
+                serial: 'EMZ006804980', status: 'Not Serviceable', assigned: '—', notes: 'Handed over to procurement' },
+            { tag: 'FGT90D3Z15001130', category: 'Network Device', department: 'Idle', model: 'FORTIGATE-90D',
+                serial: 'FGT90D3Z15001130', status: 'Obsolete', assigned: '—', notes: 'Handed over to procurement' },
+            { tag: '3CQ6210K2P', category: 'Other', department: 'Idle', model: 'HP V194 Monitor',
+                serial: '3CQ6210K2P', status: 'Faulty', assigned: '—', notes: 'Handed over to procurement' },
+            { tag: 'CNC129PYHQ', category: 'Other', department: 'Idle', model: 'HP 2011x Monitor',
+                serial: 'CNC129PYHQ', status: 'Faulty', assigned: '—', notes: 'Handed over to procurement' },
+            { tag: 'CAT1031ZGUJ', category: 'Network Device', department: 'Idle', model: 'SWITCH 1 first floor',
+                serial: 'CAT1031ZGUJ', status: 'Faulty', assigned: '—', notes: 'To be disposed' },
+
+            // ── SOFTWARE LICENSES (from list_of_Softwares) ──
+            { tag: 'SW-001', category: 'Software License', department: 'ICT', model: 'Windows Server 2012 R2 Std',
+                serial: 'N/A', status: 'In Store', assigned: 'ICT', notes: '1pk DSP OEI 2cpu/2VM' },
+            { tag: 'SW-002', category: 'Software License', department: 'ICT', model: 'Windows 11', serial: 'N/A',
+                status: 'In Store', assigned: 'ICT', notes: '' },
+            { tag: 'SW-003', category: 'Software License', department: 'Research', model: 'SPSS Version 16',
+                serial: 'N/A', status: 'In Store', assigned: 'Research', notes: '' },
+            { tag: 'SW-004', category: 'Software License', department: 'ICT', model: 'ESET Enterprise (69 licenses)',
+                serial: 'N/A', status: 'In Store', assigned: 'ICT', notes: 'Endpoint security' },
+            { tag: 'SW-005', category: 'Software License', department: 'Finance', model: 'Sage Pastel Accounting',
+                serial: 'N/A', status: 'In Store', assigned: 'Finance', notes: '' },
+            { tag: 'SW-006', category: 'Software License', department: 'HR', model: 'Sage People Payroll',
+                serial: 'N/A', status: 'In Store', assigned: 'HR', notes: '' },
+            { tag: 'SW-007', category: 'Software License', department: 'Library', model: 'KOHA Library Management',
+                serial: 'N/A', status: 'In Store', assigned: 'Library', notes: '' },
+            { tag: 'SW-008', category: 'Software License', department: 'ICT', model: 'Office 365', serial: 'N/A',
+                status: 'In Store', assigned: 'ICT', notes: 'Cloud hosting' },
+            { tag: 'SW-009', category: 'Software License', department: 'ICT', model: 'Zoom for Virtual Meetings',
+                serial: 'N/A', status: 'In Store', assigned: 'ICT', notes: '' },
+            { tag: 'SW-010', category: 'Software License', department: 'ICT', model: 'Adobe InDesign', serial: 'N/A',
+                status: 'In Store', assigned: 'ICT', notes: 'Renewal ongoing' },
+        ];
+
+        // ============================================================
+        //  RENDER ENGINE
+        // ============================================================
+        let currentAssets = [...ASSET_DATA];
+        let editMode = false;
+
+        function getStatusClass(status) {
+            const s = (status || '').toLowerCase();
+            if (s === 'working') return 'working';
+            if (s === 'requires servicing') return 'requires-servicing';
+            if (s === 'in store') return 'in-store';
+            if (s === 'decommissioned') return 'decommissioned';
+            if (s === 'faulty') return 'faulty';
+            if (s === 'obsolete') return 'obsolete';
+            if (s === 'not serviceable') return 'not-serviceable';
+            return '';
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('assetInventoryBody');
+            if (!data.length) {
+                tbody.innerHTML =
+                    `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📭</div><h4>No assets found</h4><p>Try adjusting your filters or register a new asset.</p></div></td></tr>`;
+                document.getElementById('assetCount').textContent = '0 assets';
+                return;
+            }
+            let html = '';
+            data.forEach(a => {
+                const statusClass = getStatusClass(a.status);
+                const tagDisplay = a.tag && a.tag.length > 0 ? a.tag : '—';
+                const serialDisplay = a.serial && a.serial.length > 0 ? a.serial : '—';
+                const modelDisplay = a.model && a.model.length > 0 ? a.model : '—';
+                const deptDisplay = a.department && a.department.length > 0 ? a.department : '—';
+                const assignedDisplay = a.assigned && a.assigned.length > 0 ? a.assigned : '—';
+                const notesDisplay = a.notes && a.notes.length > 0 ? a.notes : '';
+                html += `<tr>
+                            <td><span class="asset-tag">${tagDisplay}</span></td>
+                            <td>${a.category || '—'}</td>
+                            <td>${deptDisplay}</td>
+                            <td><span class="text-ellipsis" title="${modelDisplay}">${modelDisplay}</span></td>
+                            <td><span style="font-family:monospace;font-size:12px;">${serialDisplay}</span></td>
+                            <td><span class="status-badge ${statusClass}">${a.status || '—'}</span></td>
+                            <td>${assignedDisplay}</td>
+                            <td>
+                                <button class="btn btn-outline btn-sm edit-btn" data-tag="${a.tag}" style="font-size:11px;padding:2px 8px;">✎</button>
+                            </td>
+                        </tr>`;
+            });
+            tbody.innerHTML = html;
+            document.getElementById('assetCount').textContent = data.length + ' assets';
+
+            // attach edit handlers
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const tag = this.getAttribute('data-tag');
+                    openEditModal(tag);
+                });
+            });
+        }
+
+        function filterAssets() {
+            const search = document.getElementById('filterSearch').value.toLowerCase().trim();
+            const cat = document.getElementById('filterCategory').value;
+            const stat = document.getElementById('filterStatus').value;
+
+            let filtered = ASSET_DATA.filter(a => {
+                const matchSearch = !search ||
+                    (a.tag || '').toLowerCase().includes(search) ||
+                    (a.model || '').toLowerCase().includes(search) ||
+                    (a.serial || '').toLowerCase().includes(search) ||
+                    (a.department || '').toLowerCase().includes(search) ||
+                    (a.assigned || '').toLowerCase().includes(search);
+                const matchCat = !cat || a.category === cat;
+                const matchStat = !stat || a.status === stat;
+                return matchSearch && matchCat && matchStat;
+            });
+            currentAssets = filtered;
+            renderTable(filtered);
+        }
+
+        // ============================================================
+        //  MODAL LOGIC
+        // ============================================================
+        const modal = document.getElementById('assetModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const closeModalBtns = [
+            document.getElementById('closeModalBtn'),
+            document.getElementById('closeModalBtn2'),
+        ];
+        const form = document.getElementById('assetForm');
+        const editIdInput = document.getElementById('editAssetId');
+
+        function openModal(title, data) {
+            modalTitle.textContent = title;
+            editMode = !!data;
+            if (data) {
+                document.getElementById('formAssetTag').value = data.tag || '';
+                document.getElementById('formCategory').value = data.category || 'Laptop';
+                document.getElementById('formDepartment').value = data.department || '';
+                document.getElementById('formModel').value = data.model || '';
+                document.getElementById('formSerial').value = data.serial || '';
+                document.getElementById('formStatus').value = data.status || 'Working';
+                document.getElementById('formAssignedTo').value = data.assigned || '';
+                document.getElementById('formNotes').value = data.notes || '';
+                editIdInput.value = data.tag || '';
+            } else {
+                form.reset();
+                editIdInput.value = '';
+                document.getElementById('formCategory').value = 'Laptop';
+                document.getElementById('formStatus').value = 'Working';
+            }
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            modal.classList.remove('show');
+        }
+
+        closeModalBtns.forEach(btn => {
+            if (btn) btn.addEventListener('click', closeModal);
+        });
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
+
+        function openEditModal(tag) {
+            const asset = ASSET_DATA.find(a => a.tag === tag);
+            if (asset) {
+                openModal('Edit Asset — ' + tag, asset);
+            } else {
+                toast('Asset not found', 'error');
+            }
+        }
+
+        // ============================================================
+        //  SAVE ASSET
+        // ============================================================
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const tag = document.getElementById('formAssetTag').value.trim();
+            if (!tag) {
+                document.getElementById('assetTagError').style.display = 'block';
+                return;
+            }
+            document.getElementById('assetTagError').style.display = 'none';
+
+            const payload = {
+                tag: tag,
+                category: document.getElementById('formCategory').value,
+                department: document.getElementById('formDepartment').value.trim(),
+                model: document.getElementById('formModel').value.trim(),
+                serial: document.getElementById('formSerial').value.trim(),
+                status: document.getElementById('formStatus').value,
+                assigned: document.getElementById('formAssignedTo').value.trim(),
+                notes: document.getElementById('formNotes').value.trim(),
+            };
+
+            const editTag = editIdInput.value;
+            if (editMode && editTag) {
+                // update existing
+                const idx = ASSET_DATA.findIndex(a => a.tag === editTag);
+                if (idx !== -1) {
+                    ASSET_DATA[idx] = payload;
+                    toast('Asset updated successfully', 'success');
+                } else {
+                    toast('Error updating asset', 'error');
+                }
+            } else {
+                // add new
+                if (ASSET_DATA.some(a => a.tag === tag)) {
+                    toast('An asset with this tag already exists', 'error');
+                    return;
+                }
+                ASSET_DATA.push(payload);
+                toast('New asset registered successfully', 'success');
+            }
+            closeModal();
+            filterAssets();
+        });
+
+        // ============================================================
+        //  TOAST
+        // ============================================================
+        function toast(message, type) {
+            showToast(message, type === 'success' ? 'success' : 'error');
+        }
+
+        // ============================================================
+        //  EXPORT CSV
+        // ============================================================
+        function exportCsv() {
+            const headers = ['Asset Tag', 'Category', 'Department', 'Model', 'Serial Number', 'Status', 'Assigned To',
+                'Notes'
+            ];
+            const rows = ASSET_DATA.map(a => [
+                a.tag || '',
+                a.category || '',
+                a.department || '',
+                a.model || '',
+                a.serial || '',
+                a.status || '',
+                a.assigned || '',
+                a.notes || ''
+            ]);
+            const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'NCRC_Asset_Inventory_16Jul2026.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            toast('CSV exported', 'success');
+        }
+
+        // ============================================================
+        //  INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // filter events
+            document.getElementById('filterSearch').addEventListener('input', filterAssets);
+            document.getElementById('filterCategory').addEventListener('change', filterAssets);
+            document.getElementById('filterStatus').addEventListener('change', filterAssets);
+
+            // add asset buttons
+            document.querySelectorAll('#addAssetBtnTop, #addAssetBtnTop2').forEach(btn => {
+                if (btn) btn.addEventListener('click', function() {
+                    openModal('Register New Asset', null);
+                });
+            });
+            // Also bind the one from the template if present
+            const addBtn = document.getElementById('addAssetBtnTop');
+            if (addBtn) addBtn.addEventListener('click', function() {
+                openModal('Register New Asset', null);
+            });
+
+            // export
+            document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+
+            // sidebar toggle (mobile)
+            const sidebar = document.querySelector('.sidebar');
+            const hamburger = document.getElementById('hamburgerBtn');
+            if (hamburger && sidebar) {
+                hamburger.addEventListener('click', function() {
+                    sidebar.classList.toggle('open');
+                });
+            }
+
+            // close sidebar on outside click (mobile)
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768 && sidebar && hamburger) {
+                    if (!sidebar.contains(e.target) && !hamburger.contains(e.target)) {
+                        sidebar.classList.remove('open');
+                    }
+                }
+            });
+
+            // notification bell
+            document.getElementById('notificationBell').addEventListener('click', function(e) {
+                e.stopPropagation();
+                const drop = document.getElementById('notificationDropdown');
+                drop.classList.toggle('show');
+                if (drop.classList.contains('show')) {
+                    drop.innerHTML =
+                        `<div class="notif-item">📌 Asset inventory loaded (${ASSET_DATA.length} assets)</div>
+                                     <div class="notif-item">📅 Snapshot: 16 July 2026</div>
+                                     <div class="notif-item">🔄 Use filters to narrow down</div>`;
+                }
+            });
+            document.addEventListener('click', function() {
+                document.getElementById('notificationDropdown').classList.remove('show');
+            });
+
+            // logout
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                if (confirm('Logout?')) {
+                    toast('Logged out', 'success');
+                    // reset user display
+                    document.getElementById('userMenuName').textContent = 'Guest';
+                    document.getElementById('userMenuRole').textContent = 'Not logged in';
+                    document.getElementById('userMenuAvatar').textContent = '👤';
+                }
+            });
+
+            // initial render
+            renderTable(ASSET_DATA);
+        });
+
+        // also expose for debugging
+        console.log('NCRC Asset Inventory loaded. Total assets:', ASSET_DATA.length);
+        })();
+    </script>
+
+</body>
+</html>

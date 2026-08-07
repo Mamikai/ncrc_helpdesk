@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCRC Help Desk - ICT Dashboard</title>
+    <link rel="stylesheet" href="../../assets/css/variables.css">
+    <link rel="stylesheet" href="../../assets/css/components.css">
+    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+</head>
+<body>
+<div class="app-shell">
+    <div id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="page-inner">
+
+            <div class="topbar">
+                <div class="page-title">
+                    <h2>ICT Support Dashboard</h2>
+                    <div class="subtitle">Claim tickets, update status, keep the queue moving</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="notification-bell" id="notificationBell">🔔<span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                        <div class="notification-dropdown" id="notificationDropdown"></div>
+                    </div>
+                    <div class="user-menu">
+                        <div class="user-menu-info">
+                            <div class="user-menu-name" id="userMenuName">—</div>
+                            <div class="user-menu-role" id="userMenuRole">—</div>
+                        </div>
+                        <div class="user-avatar" id="userMenuAvatar">—</div>
+                        <button class="btn btn-outline btn-sm" id="logoutBtn">Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <a href="../assets/inventory.html" class="btn btn-secondary">Asset Inventory</a>
+                <a href="../assets/assign.html" class="btn btn-gold">Assign Asset</a>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Announcements</h3></div>
+                <div id="announcementsList"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">Ticket Queue</h3></div>
+                <div class="tab-bar">
+                    <button class="tab-btn active" data-view="all">All <span class="tab-count" id="tabCountAll">—</span></button>
+                    <button class="tab-btn" data-view="unclaimed">Unclaimed <span class="tab-count" id="tabCountUnclaimed">—</span></button>
+                    <button class="tab-btn" data-view="mine">My Tickets <span class="tab-count" id="tabCountMine">—</span></button>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead><tr><th>ID</th><th>Title</th><th>Reported By</th><th>Assigned To</th><th>Priority</th><th>Status</th><th>Created</th></tr></thead>
+                        <tbody id="ticketsTableBody"><!-- TODO: dynamic data from backend - tickets.js loadTicketList() --></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <footer class="ncrc-footer">
+                <div class="footer-logo"><img src="../../assets/images/ncrc-logo.png" alt="NCRC logo" style="width:40px;height:40px;border-radius:50%;"><div class="footer-brand">National Crime Research Centre</div></div>
+                <div class="footer-tagline">Fighting Crime Through Research</div>
+                <div class="footer-copyright">2026 National Crime Research Centre (NCRC) | All Rights Reserved</div>
+            </footer>
+
+        </div>
+    </div>
+</div>
+
+<script src="../../assets/js/ui.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/session.js"></script>
+<script src="../../assets/js/sidebar.js"></script>
+<script src="../../assets/js/notifications.js"></script>
+<script src="../../assets/js/tickets.js"></script>
+<script src="../../assets/js/announcements.js"></script>
+<script>
+(async function () {
+    const session = await initAuthenticatedPage();
+    if (!session) return;
+
+    loadAnnouncements('announcementsList');
+    loadTicketList('ticketsTableBody', true, 'all');
+    initTicketTabs(session);
+})();
+</script>
+</body>
+</html>

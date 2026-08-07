@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCRC Help Desk - Add User</title>
+    <link rel="stylesheet" href="../../assets/css/variables.css">
+    <link rel="stylesheet" href="../../assets/css/components.css">
+    <link rel="stylesheet" href="../../assets/css/auth.css">
+</head>
+<body>
+<div class="app-shell">
+    <div id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="page-inner narrow">
+
+            <div class="topbar">
+                <div class="page-title">
+                    <h2>Add User</h2>
+                    <div class="subtitle"><a href="../dashboard/admin.html">← Back to dashboard</a></div>
+                </div>
+                <div class="topbar-right">
+                    <div class="notification-bell" id="notificationBell">🔔<span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                        <div class="notification-dropdown" id="notificationDropdown"></div>
+                    </div>
+                    <div class="user-menu">
+                        <div class="user-menu-info">
+                            <div class="user-menu-name" id="userMenuName">—</div>
+                            <div class="user-menu-role" id="userMenuRole">—</div>
+                        </div>
+                        <div class="user-avatar" id="userMenuAvatar">—</div>
+                        <button class="btn btn-outline btn-sm" id="logoutBtn">Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="auth-logo" style="margin-bottom: var(--spacing-md);">
+                    <img src="../../assets/images/ncrc-logo.png" alt="NCRC logo" class="logo-image">
+                    <div class="logo-org-name">National Crime Research Centre</div>
+                    <div class="logo-tagline">Fighting Crime Through Research</div>
+                </div>
+                <form id="addUserForm">
+                    <div class="form-group">
+                        <label class="form-label" for="fullNameInput">Full Name</label>
+                        <input type="text" id="fullNameInput" class="form-control" placeholder="e.g. Jane Mwangi" autocomplete="name">
+                        <div class="form-error" id="nameError">Please enter the staff member's full name.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="emailInput">Email ID</label>
+                        <input type="email" id="emailInput" class="form-control" placeholder="e.g. jane.mwangi@crimeresearch.go.ke" autocomplete="email">
+                        <div class="form-error" id="emailError">Please enter a valid email address.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="roleSelect">Role</label>
+                        <select class="form-control" id="roleSelect">
+                            <option value="user">End User</option>
+                            <option value="ict">ICT Officer</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="ticketDepartment">Department *</label>
+                        <select id="ticketDepartment" class="form-control">
+                            <option value="">Select Department</option>
+                            <option value="ICT">ICT</option>
+                            <option value="Research">Research</option>
+                            <option value="Finance and Accounts">Finance and Accounts</option>
+                            <option value="Human Resource & Administration">Human Resource &amp; Administration</option>
+                            <option value="Corporate Communications">Corporate Communications</option>
+                            <option value="Supply Chain Management">Supply Chain Management</option>
+                            <option value="Internal Audit">Internal Audit</option>
+                            <option value="Legal Services">Legal Services</option>
+                            <option value="Director/CEO Office">Director/CEO Office</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <div class="form-error" id="departmentError">Please select a department.</div>
+                    </div>
+
+                    <div class="auth-hint" style="margin: 0 0 var(--spacing-lg); background: var(--color-bg); border-radius: var(--radius-input); padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--color-text-light);">
+                        Every new account gets the same default password. The user will be
+                        required to set their own password on first login.
+                    </div>
+
+                    <button type="button" class="btn btn-primary" id="addUserBtn">Create User</button>
+                </form>
+
+                <div class="card" id="resultPanel" style="display:none; margin-top: var(--spacing-lg); background: var(--color-bg);">
+                    <div class="card-header"><h3 class="card-title">Account Created</h3></div>
+                    <p style="margin-bottom: var(--spacing-sm);">Share this default password with the new user securely:</p>
+                    <div class="form-control" id="tempPasswordDisplay" style="font-family: monospace; font-weight: 700; background: var(--color-surface); text-align: center; font-size: 1.1rem;"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="../../assets/js/ui.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/session.js"></script>
+<script src="../../assets/js/sidebar.js"></script>
+<script src="../../assets/js/notifications.js"></script>
+<script src="../../assets/js/users.js"></script>
+<script>
+(async function () {
+    const session = await initAuthenticatedPage();
+    if (!session) return;
+    initAddUserForm();
+})();
+</script>
+</body>
+</html>
