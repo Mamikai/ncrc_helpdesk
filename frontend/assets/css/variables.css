@@ -1,0 +1,75 @@
+/* ============================================
+   NCRC HELP DESK - DESIGN TOKENS
+   Single source of truth for all colors, spacing,
+   radius, shadows. Every other CSS file reads
+   from these variables — never hardcode a hex
+   value anywhere else.
+
+   Palette derived from the NCRC logo: green shield,
+   navy ring text, gold border/stars, red ribbon.
+   ============================================ */
+
+:root {
+    /* ---- Brand colors (from logo) ---- */
+    --color-primary: #1a5c1a;
+    --color-primary-hover: #124012;
+    --color-primary-light: rgba(26, 92, 26, 0.1);
+
+    --color-secondary: #1a2a6c;
+    --color-secondary-hover: #0f1a4a;
+
+    --color-accent: #d4a843;
+    --color-accent-hover: #b8922f;
+
+    --color-danger: #c0392b;
+    --color-danger-hover: #a93226;
+
+    --color-success: #27ae60;
+    --color-warning: #f39c12;
+    --color-info: #2980b9;
+
+    /* ---- Neutral / surface ---- */
+    --color-bg: #f0f2f5;
+    --color-surface: #ffffff;
+    --color-sidebar-bg: #14241a;
+
+    /* ---- Text ---- */
+    --color-text: #1e2a3a;
+    --color-text-light: #6b7a8f;
+    --color-text-white: #ffffff;
+    --color-text-muted: #a8b5c7;
+
+    /* ---- Borders ---- */
+    --color-border: #dce1eb;
+    --color-border-focus: var(--color-primary);
+
+    /* ---- Spacing scale ---- */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+
+    /* ---- Radius ---- */
+    --radius-card: 16px;
+    --radius-input: 10px;
+    --radius-button: 8px;
+    --radius-badge: 9999px;
+
+    /* ---- Typography ---- */
+    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+
+    /* ---- Shadows ---- */
+    --shadow-card: 0 2px 8px rgba(26, 42, 108, 0.06);
+    --shadow-card-hover: 0 4px 16px rgba(26, 42, 108, 0.12);
+    --shadow-login-card: 0 8px 32px rgba(26, 42, 108, 0.12);
+    --shadow-input-focus: 0 0 0 3px rgba(26, 92, 26, 0.15);
+    --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.15);
+
+    /* ---- Layout ---- */
+    --sidebar-width: 240px;
+
+    /* ---- Header/footer gradient ---- */
+    --gradient-header: linear-gradient(135deg, var(--color-primary) 0%, #0d3d0d 100%);
+    --gradient-footer: linear-gradient(135deg, var(--color-primary) 0%, #0d3d0d 100%);
+}

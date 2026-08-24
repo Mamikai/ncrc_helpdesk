@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCRC Help Desk - Tickets</title>
+    <link rel="stylesheet" href="../../assets/css/variables.css">
+    <link rel="stylesheet" href="../../assets/css/components.css">
+</head>
+<body>
+<div class="app-shell">
+    <div id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="page-inner">
+
+            <div class="topbar">
+                <div class="page-title">
+                    <h2>Tickets</h2>
+                    <div class="subtitle" id="pageSubtitle">Loading...</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="notification-bell" id="notificationBell">🔔<span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                        <div class="notification-dropdown" id="notificationDropdown"></div>
+                    </div>
+                    <div class="user-menu">
+                        <div class="user-menu-info">
+                            <div class="user-menu-name" id="userMenuName">—</div>
+                            <div class="user-menu-role" id="userMenuRole">—</div>
+                        </div>
+                        <div class="user-avatar" id="userMenuAvatar">—</div>
+                        <button class="btn btn-outline btn-sm" id="logoutBtn">Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions" id="newTicketAction" style="display:none;">
+                <a href="create.html" class="btn btn-primary">+ New Ticket</a>
+            </div>
+
+            <div class="card">
+                <div class="tab-bar" id="ictTabBar" style="display:none;">
+                    <button class="tab-btn active" data-view="all">All <span class="tab-count" id="tabCountAll">—</span></button>
+                    <button class="tab-btn" data-view="unclaimed">Unclaimed <span class="tab-count" id="tabCountUnclaimed">—</span></button>
+                    <button class="tab-btn" data-view="mine">My Tickets <span class="tab-count" id="tabCountMine">—</span></button>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead id="tableHead"></thead>
+                        <tbody id="ticketsTableBody"><!-- TODO: dynamic data from backend - tickets.js loadTicketList() --></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="../../assets/js/ui.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/session.js"></script>
+<script src="../../assets/js/sidebar.js"></script>
+<script src="../../assets/js/notifications.js"></script>
+<script src="../../assets/js/tickets.js"></script>
+<script>
+(async function () {
+    const session = await initAuthenticatedPage();
+    if (!session) return;
+
+    const showReportedBy = session.role !== 'user';
+    const head = document.getElementById('tableHead');
+    head.innerHTML = '<tr><th>ID</th><th>Title</th>' +
+        (showReportedBy ? '<th>Reported By</th>' : '') +
+        '<th>Assigned To</th><th>Priority</th><th>Status</th><th>Created</th></tr>';
+
+    if (session.role === 'user') {
+        document.getElementById('pageSubtitle').textContent = 'Your submitted support requests';
+        document.getElementById('newTicketAction').style.display = 'flex';
+        loadTicketList('ticketsTableBody', false);
+    } else if (session.role === 'ict') {
+        document.getElementById('pageSubtitle').textContent = 'Claim tickets, update status, keep the queue moving';
+        document.getElementById('ictTabBar').style.display = 'flex';
+        loadTicketList('ticketsTableBody', true, 'all');
+        initTicketTabs(session);
+    } else {
+        document.getElementById('pageSubtitle').textContent = 'All tickets across the organization';
+        loadTicketList('ticketsTableBody', true);
+    }
+})();
+</script>
+</body>
+</html>

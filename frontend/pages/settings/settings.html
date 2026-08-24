@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCRC Help Desk - Settings</title>
+    <link rel="stylesheet" href="../../assets/css/variables.css">
+    <link rel="stylesheet" href="../../assets/css/components.css">
+</head>
+<body>
+<div class="app-shell">
+    <div id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="page-inner narrow">
+
+            <div class="topbar">
+                <div class="page-title">
+                    <h2>Settings</h2>
+                    <div class="subtitle">Manage your account</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="notification-bell" id="notificationBell">🔔<span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                        <div class="notification-dropdown" id="notificationDropdown"></div>
+                    </div>
+                    <div class="user-menu">
+                        <div class="user-menu-info">
+                            <div class="user-menu-name" id="userMenuName">—</div>
+                            <div class="user-menu-role" id="userMenuRole">—</div>
+                        </div>
+                        <div class="user-avatar" id="userMenuAvatar">—</div>
+                        <button class="btn btn-outline btn-sm" id="logoutBtn">Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="forceResetBanner" style="display:none; background: #fff3cd; border-left: 4px solid var(--color-warning);">
+                <strong>You're using a default password.</strong> Set a new one below before continuing —
+                other sections of the app are locked until you do.
+            </div>
+
+            <div class="card settings-section">
+                <div class="settings-section-title">Change Password</div>
+                <form id="changePasswordForm">
+                    <div class="form-group">
+                        <label class="form-label" for="currentPasswordInput">Current Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="currentPasswordInput" class="form-control" autocomplete="current-password">
+                            <button type="button" class="password-toggle" data-toggle-password="currentPasswordInput">👁️</button>
+                        </div>
+                        <div class="form-error" id="currentPasswordError">Please enter your current password.</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="newPasswordInput">New Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="newPasswordInput" class="form-control" autocomplete="new-password">
+                            <button type="button" class="password-toggle" data-toggle-password="newPasswordInput">👁️</button>
+                        </div>
+                        <div class="form-hint">At least 8 characters.</div>
+                        <div class="form-error" id="newPasswordError">New password must be at least 8 characters.</div>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="changePasswordBtn">Update Password</button>
+                </form>
+            </div>
+
+            <div class="card settings-section" id="displayNameSection">
+                <div class="settings-section-title">Display Name</div>
+                <div class="form-group">
+                    <label class="form-label" for="displayNameInput">Full Name</label>
+                    <input type="text" id="displayNameInput" class="form-control">
+                    <div class="form-error" id="displayNameError">Please enter a valid name.</div>
+                </div>
+                <button type="button" class="btn btn-secondary" id="saveDisplayNameBtn">Save Name</button>
+            </div>
+
+            <div class="card settings-section">
+                <div class="settings-section-title">Department</div>
+                <div class="readonly-field" id="departmentReadonly">—</div>
+                <div class="form-hint">Department is managed by an Administrator. Contact ICT/Admin if this needs to change.</div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="../../assets/js/ui.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/session.js"></script>
+<script src="../../assets/js/sidebar.js"></script>
+<script src="../../assets/js/notifications.js"></script>
+<script>
+(async function () {
+    const session = await initAuthenticatedPage();
+    if (!session) return;
+
+    document.getElementById('displayNameInput').value = session.name;
+    document.getElementById('departmentReadonly').textContent = session.department || '—';
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('forceReset') === '1') {
+        document.getElementById('forceResetBanner').style.display = 'block';
+    }
+
+    document.getElementById('changePasswordBtn').addEventListener('click', async function () {
+        const current = document.getElementById('currentPasswordInput');
+        const next = document.getElementById('newPasswordInput');
+
+        let hasError = false;
+        if (!current.value) { showFieldError('currentPasswordError', true); hasError = true; } else { showFieldError('currentPasswordError', false); }
+        if (!next.value || next.value.length < 8) { showFieldError('newPasswordError', true); hasError = true; } else { showFieldError('newPasswordError', false); }
+        if (hasError) return;
+
+        if (API.isMock()) {
+            showToast('Password updated (demo mode)', 'success');
+            document.getElementById('forceResetBanner').style.display = 'none';
+            current.value = ''; next.value = '';
+            return;
+        }
+
+        const res = await API.post('/auth/change-password.php', { current_password: current.value, new_password: next.value });
+        if (!res.success) { showToast(res.error || 'Could not update password', 'error'); return; }
+        showToast('Password updated', 'success');
+        document.getElementById('forceResetBanner').style.display = 'none';
+        current.value = ''; next.value = '';
+    });
+
+    document.getElementById('saveDisplayNameBtn').addEventListener('click', async function () {
+        const nameInput = document.getElementById('displayNameInput');
+        if (!nameInput.value.trim() || nameInput.value.trim().length < 2) { showFieldError('displayNameError', true); return; }
+        showFieldError('displayNameError', false);
+
+        if (API.isMock()) {
+            showToast('Name updated (demo mode)', 'success');
+            return;
+        }
+
+        const res = await API.put('/users/update-profile.php', { full_name: nameInput.value.trim() });
+        if (!res.success) { showToast(res.error || 'Could not update name', 'error'); return; }
+        showToast('Name updated', 'success');
+    });
+})();
+</script>
+</body>
+</html>

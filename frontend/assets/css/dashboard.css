@@ -1,0 +1,13 @@
+/* ============================================
+   NCRC HELP DESK - DASHBOARD OVERRIDES
+   Deliberately thin — genuine per-role visual
+   exceptions only. Layout lives in components.css.
+   ============================================ */
+
+[data-role="admin"] .page-title h2::after {
+    content: " · Full Access";
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--color-accent-hover);
+    vertical-align: middle;
+}

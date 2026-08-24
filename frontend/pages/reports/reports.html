@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NCRC Help Desk - Reports</title>
+    <link rel="stylesheet" href="../../assets/css/variables.css">
+    <link rel="stylesheet" href="../../assets/css/components.css">
+</head>
+<body>
+<div class="app-shell">
+    <div id="sidebarMount"></div>
+    <div class="main-content">
+        <div class="page-inner">
+            <div class="topbar">
+                <div class="page-title">
+                    <h2>Reports</h2>
+                    <div class="subtitle">Live overview of ticket health, SLA performance, and recent activity</div>
+                </div>
+                <div class="topbar-right">
+                    <div class="notification-bell" id="notificationBell">🔔<span class="notification-badge" id="notificationBadge" style="display:none;">0</span>
+                        <div class="notification-dropdown" id="notificationDropdown"></div>
+                    </div>
+                    <div class="user-menu">
+                        <div class="user-menu-info">
+                            <div class="user-menu-name" id="userMenuName">—</div>
+                            <div class="user-menu-role" id="userMenuRole">—</div>
+                        </div>
+                        <div class="user-avatar" id="userMenuAvatar">—</div>
+                        <button class="btn btn-outline btn-sm" id="logoutBtn">Logout</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters-row">
+                <div class="filter-item">
+                    <label>ICT Officer</label>
+                    <select id="filterOfficer" class="form-control">
+                        <option value="all">All officers</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>User</label>
+                    <select id="filterUser" class="form-control">
+                        <option value="all">All users</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Status</label>
+                    <select id="filterStatus" class="form-control">
+                        <option value="all">All statuses</option>
+                        <option value="open">Open</option>
+                        <option value="inprogress">In progress</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Priority</label>
+                    <select id="filterPriority" class="form-control">
+                        <option value="all">All priorities</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label>Department</label>
+                    <select id="filterDepartment" class="form-control">
+                        <!-- Populated by populateDepartmentFilterByName() in ui.js - never hand-typed -->
+                    </select>
+                </div>
+                <div class="filter-item filter-export">
+                    <label>&nbsp;</label>
+                    <div class="export-group">
+                        <button id="exportCsvBtn" class="btn btn-outline">Export CSV</button>
+                        <button id="exportXlsBtn" class="btn btn-outline">Export Excel</button>
+                    </div>
+                </div>
+            </div>
+
+            <section class="stats-grid">
+                <div class="stat-card high">
+                    <div class="stat-number high" id="reportTotal">—</div>
+                    <div class="stat-label">Total Tickets</div>
+                </div>
+                <div class="stat-card inprogress">
+                    <div class="stat-number" id="reportInProgress">—</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+                <div class="stat-card resolved">
+                    <div class="stat-number low" id="reportResolved">—</div>
+                    <div class="stat-label">Resolved</div>
+                </div>
+                <div class="stat-card gold">
+                    <div class="stat-number gold" id="reportSla">—</div>
+                    <div class="stat-label">SLA Compliance</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="reportBreaches">—</div>
+                    <div class="stat-label">Overdue / At Risk</div>
+                </div>
+            </section>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Ticket Volume</h3>
+                        <div class="report-chip">Last 7 days</div>
+                    </div>
+                    <div class="report-chart" id="volumeChart"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Recent Tickets</h3>
+                        <div class="reports-toolbar-right">
+                            <div class="reports-search">
+                                <span>🔎</span>
+                                <input type="text" id="reportsSearchInput" placeholder="Search tickets" />
+                            </div>
+                            <select id="reportsStatusFilter" class="form-control reports-filter">
+                                <option value="all">All statuses</option>
+                                <option value="open">Open</option>
+                                <option value="inprogress">In progress</option>
+                                <option value="resolved">Resolved</option>
+                                <option value="closed">Closed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Ticket</th>
+                                    <th>Created</th>
+                                    <th>Department</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>SLA</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Operational Summary</h3>
+                </div>
+                <div class="report-summary-grid">
+                    <div class="report-summary-item">
+                        <div class="report-summary-label">Open queue</div>
+                        <div class="report-summary-value" id="summaryOpen">—</div>
+                    </div>
+                    <div class="report-summary-item">
+                        <div class="report-summary-label">High priority</div>
+                        <div class="report-summary-value" id="summaryHigh">—</div>
+                    </div>
+                    <div class="report-summary-item">
+                        <div class="report-summary-label">Pending assignment</div>
+                        <div class="report-summary-value" id="summaryUnassigned">—</div>
+                    </div>
+                    <div class="report-summary-item">
+                        <div class="report-summary-label">Latest activity</div>
+                        <div class="report-summary-value" id="summaryLatest">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="ncrc-footer">
+                <div class="footer-logo"><img src="../../assets/images/logo-dark.png" alt="NCRC Help Desk logo" class="brand-logo"><div class="footer-brand">National Crime Research Centre</div></div>
+                <div class="footer-tagline">Fighting Crime Through Research</div>
+                <div class="footer-copyright">2026 National Crime Research Centre (NCRC) | All Rights Reserved</div>
+            </footer>
+        </div>
+    </div>
+</div>
+
+<script src="../../assets/js/ui.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/session.js"></script>
+<script src="../../assets/js/sidebar.js"></script>
+<script src="../../assets/js/notifications.js"></script>
+<script src="../../assets/js/tickets.js"></script>
+<script src="../../assets/js/reports.js"></script>
+</body>
+</html>
